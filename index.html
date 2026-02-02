@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workout App</title>
+<style>
+/* General styling */
+body {
+  margin:0; padding:0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial;
+  background: #121212;
+  color: #fff;
+  display:flex; justify-content:center; align-items:center;
+  min-height:100vh;
+}
+
+/* Home screen */
+#home {
+  text-align:center;
+}
+
+h1 { margin-bottom:20px; }
+
+/* Buttons */
+button {
+  padding:15px 25px;
+  margin:10px;
+  font-size:18px;
+  border:none;
+  border-radius:12px;
+  color:#fff;
+  cursor:pointer;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  transition: transform 0.1s;
+}
+button:active { transform: scale(0.97); }
+
+.workout-btn { background: linear-gradient(45deg, #2e7dff, #4facff); width:140px; }
+
+/* Workout card */
+#workout {
+  display:none;
+  max-width:400px;
+  width:90%;
+  text-align:center;
+}
+
+.card {
+  background:#1f1f1f;
+  border-radius:16px;
+  padding:25px;
+  margin-bottom:15px;
+  box-shadow: 0 6px 10px rgba(0,0,0,0.5);
+}
+
+#exerciseName { font-size:22px; font-weight:bold; }
+#exerciseReps { margin-top:8px; font-size:18px; color:#aaa; }
+
+.timer {
+  font-size:28px;
+  margin-top:15px;
+  color:#4facff;
+}
+
+/* Progress bar */
+#progressContainer {
+  background:#333;
+  border-radius:12px;
+  overflow:hidden;
+  margin:15px 0;
+  height:12px;
+}
+#progressBar {
+  background:#2e7dff;
+  height:100%;
+  width:0%;
+  transition: width 0.3s;
+}
+
+/* Checkmark */
+#checkmark {
+  font-size:24px;
+  color:#00ff85;
+  display:none;
+}
+</style>
+</head>
+<body>
+
+<div id="home">
+<h1>Workout App</h1>
+<button class="workout-btn" onclick="startWorkout(0)">Workout 1</button>
+<button class="workout-btn" onclick="startWorkout(1)">Workout 2</button>
+<button class="workout-btn" onclick="startWorkout(2)">Workout 3</button>
+<button class="workout-btn" onclick="startWorkout(3)">Workout 4</button>
+</div>
+
+<div id="workout">
+<h2 id="title"></h2>
+
+<div class="card">
+<h3 id="exerciseName"></h3>
+<p id="exerciseReps"></p>
+<div class="timer" id="timer">Rest: 90s</div>
+<div id="checkmark">✔ Completed</div>
+</div>
+
+<div id="progressContainer">
+<div id="progressBar"></div>
+</div>
+
+<button onclick="prevExercise()">⬅ Back</button>
+<button onclick="startRest()">Start Rest</button>
+<button onclick="nextExercise()">Next ➡</button>
+<br><br>
+<button onclick="goHome()">🏠 Home</button>
+</div>
+
+<script>
+// Workout data
+const workouts = [
+{
+title:"Workout 1: Arms & Chest - Strength & Mass",
+exercises:[
+["Dumbbell Bench Press","4x6-8"],
+["Incline DB Press","3x8-10"],
+["Kettlebell Floor Press","3x8-10 each arm"],
+["Weighted Dips","3x8-12"],
+["Overhead Press","3x8-10"],
+["Bicep Curls","3x8-10"],
+["Tricep Extension","3x10-12"],
+["Face Pulls","3x15-20"]
+]},
+{
+title:"Workout 2: Back & Core",
+exercises:[
+["Bent-Over Rows","4x6-8"],
+["Single-Arm Rows","3x8-10 each arm"],
+["Banded Lat Pulldowns","4x10-12"],
+["Renegade Rows","3x6-8 each arm"],
+["Pull-Overs","3x10-12"],
+["Ab Rollouts","3x8-12"],
+["Russian Twists","3x10 each side"],
+["Suitcase Carries","3x40ft"]
+]},
+{
+title:"Workout 3: Arms & Chest - Pump",
+exercises:[
+["Incline Press","4x10-12"],
+["Banded Chest Press","3x15-20"],
+["Flyes","3x12-15"],
+["Close-Grip Press","3x10-12"],
+["Strict Press","3x8-10 each arm"],
+["Hammer Curls","3x10-12"],
+["Tricep Pushdowns","4x15-20"],
+["Concentration Curls","3x10-15"]
+]},
+{
+title:"Workout 4: Lower Body",
+exercises:[
+["Goblet Squats","4x8-10"],
+["Romanian Deadlifts","4x8-10"],
+["Bulgarian Split Squats","3x8-10 each leg"],
+["Kettlebell Swings","4x15-20"],
+["Hip Thrusts","3x10-15"],
+["Walking Lunges","3x10-12 each leg"],
+["Banded Squats","3x15"],
+["Calf Raises","5x15-20"]
+]}
+];
+
+let currentWorkout=0, currentExercise=0, interval;
+
+// Elements
+const home = document.getElementById("home");
+const workoutDiv = document.getElementById("workout");
+const titleEl = document.getElementById("title");
+const nameEl = document.getElementById("exerciseName");
+const repsEl = document.getElementById("exerciseReps");
+const timerEl = document.getElementById("timer");
+const progressBar = document.getElementById("progressBar");
+const checkmark = document.getElementById("checkmark");
+
+// Functions
+function startWorkout(i){
+  currentWorkout=i; currentExercise=0;
+  home.style.display="none";
+  workoutDiv.style.display="block";
+  loadExercise();
+}
+
+function loadExercise(){
+  const ex = workouts[currentWorkout].exercises[currentExercise];
+  titleEl.innerText = workouts[currentWorkout].title;
+  nameEl.innerText = ex[0];
+  repsEl.innerText = ex[1];
+  timerEl.innerText = "Rest: 90s";
+  checkmark.style.display="none";
+  progressBar.style.width = ((currentExercise)/workouts[currentWorkout].exercises.length)*100 + "%";
+  clearInterval(interval);
+}
+
+function nextExercise(){
+  checkmark.style.display="block";
+  setTimeout(()=>{checkmark.style.display="none";}, 800);
+  if(currentExercise < workouts[currentWorkout].exercises.length-1){
+    currentExercise++;
+    loadExercise();
+  } else {
+    timerEl.innerText="Workout Complete!";
+    progressBar.style.width="100%";
+  }
+}
+
+function prevExercise(){
+  if(currentExercise > 0){ currentExercise--; loadExercise(); }
+}
+
+function startRest(){
+  let t=90;
+  clearInterval(interval);
+  interval = setInterval(()=>{
+    timerEl.innerText="Rest: "+t+"s";
+    t--;
+    if(t<0){ clearInterval(interval); timerEl.innerText="Go!"; }
+  },1000);
+}
+
+function goHome(){
+  clearInterval(interval);
+  workoutDiv.style.display="none";
+  home.style.display="block";
+}
+</script>
+
+</body>
+</html>
