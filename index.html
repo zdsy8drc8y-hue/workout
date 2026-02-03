@@ -1,26 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+<title>Workout Pro</title>
+
+<style>
+:root{
+--bg:#0f172a;
+--card:#1e293b;
+--text:#fff;
+--muted:#94a3b8;
+--accent:#3b82f6;
+--green:#22c55e;
+--danger:#ef4444;
+}
+
+.light{
+--bg:#f2f2f7;
+--card:#fff;
+--text:#111;
+--muted:#555;
+--accent:#2563eb;
+}
+
+body{
+margin:0;
+font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto;
+background:var(--bg);
+color:var(--text);
+display:flex;
+justify-content:center;
+}
+
+.container{
+width:100%;
+max-width:420px;
+padding:18px;
+}
+
+h2,h3{text-align:center;}
+
+button{
+width:100%;
+padding:16px;
+margin:8px 0;
+border:none;
+border-radius:14px;
+font-size:16px;
+font-weight:600;
+}
+
+.primary{background:var(--accent);color:white;}
+.secondary{background:var(--card);color:var(--text);}
+.green{background:var(--green);color:white;}
+.danger{background:var(--danger);color:white;}
+
+.card{
+background:var(--card);
+padding:18px;
+border-radius:16px;
+margin-top:14px;
+box-shadow:0 6px 18px rgba(0,0,0,.25);
+}
+
+.tip{color:var(--muted);font-size:14px;margin-top:6px;}
+
+.timer{
+font-size:26px;
+margin-top:8px;
+color:var(--green);
+font-weight:bold;
+}
+
+.controls{
+position:sticky;
+bottom:0;
+background:var(--bg);
+padding-top:10px;
+}
+
+input{
+width:100%;
+padding:12px;
+border-radius:10px;
+border:none;
+margin-top:8px;
+font-size:15px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<!-- HOME -->
+<div id="home">
+<h2>🏋️ Workout Pro</h2>
+
+<button class="primary" onclick="startWorkout(0)">Arms & Chest – Strength & Mass</button>
+<button class="primary" onclick="startWorkout(1)">Back & Core – Total Pulling Power</button>
+<button class="primary" onclick="startWorkout(2)">Arms & Chest – Hypertrophy & Pump</button>
+<button class="primary" onclick="startWorkout(3)">Lower Body – Total Leg Development</button>
+
+<button class="secondary" onclick="showStats()">📈 Stats</button>
+<button class="secondary" onclick="showSchedule()">📅 Weekly Plan</button>
+<button class="secondary" onclick="toggleTheme()">🌗 Light / Dark</button>
+</div>
+
+
+<!-- WORKOUT -->
+<div id="workout" style="display:none">
+<h3 id="title"></h3>
+
+<div class="card">
+<div id="exercise" style="font-size:20px;font-weight:700"></div>
+<div id="reps"></div>
+<div id="tip" class="tip"></div>
+
+<input id="weightInput" placeholder="Weight used">
+
+<div class="timer" id="timer">Rest: 90s</div>
+<div id="sets">Set 0</div>
+</div>
+
+<div class="controls">
+<button class="green" onclick="addSet()">+ Add Set</button>
+<button class="secondary" onclick="startRest()">Start Rest</button>
+<button class="secondary" onclick="showTip()">Tip</button>
+<button class="secondary" onclick="nextExercise()">Next Exercise</button>
+<button class="primary" onclick="saveWeight()">Save Weight</button>
+<button class="danger" onclick="finishWorkout()">Finish Workout</button>
+<button class="secondary" onclick="goHome()">Back</button>
+</div>
+</div>
+
+
+<!-- STATS -->
+<div id="stats" style="display:none">
+<h3>📈 Progress</h3>
+<div class="card" id="statsContent"></div>
+<button class="secondary" onclick="goHome()">Back</button>
+</div>
+
+
+<!-- SCHEDULE -->
+<div id="schedule" style="display:none">
+<h3>📅 Weekly Plan</h3>
+<div class="card">
+Mon – Workout 1<br>
+Tue – Workout 2<br>
+Wed – Rest<br>
+Thu – Workout 3<br>
+Fri – Workout 4<br>
+Sat – Rest<br>
+Sun – Rest
+</div>
+<button class="secondary" onclick="goHome()">Back</button>
+</div>
+
+</div>
+
+
 <script>
 const beep=new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
 
-/* ---------------- DATA ---------------- */
+/* ---------------- WORKOUT DATA ---------------- */
 
-const workouts=[
-["Dumbbell Bench Press","4x6-8","Drive feet into floor"],
-["Bent Over Rows","4x6-8","Squeeze shoulder blades"],
-["Incline Press","4x10-12","Control tempo"],
-["Goblet Squats","4x8-10","Chest tall & deep squat"]
+const workoutExercises=[
+[
+["Dumbbell Bench Press","4x6-8","Press through chest"],
+["Incline Dumbbell Press","3x8-10","Control tempo"],
+["Overhead Press","3x8-10","Brace core"]
+],
+[
+["Bent Over Rows","4x6-8","Squeeze lats"],
+["Pullovers","3x10-12","Big stretch"],
+["Russian Twists","3x10/side","Stay tight"]
+],
+[
+["Incline Press","4x10-12","Slow negatives"],
+["Flyes","3x12-15","Full stretch"],
+["Hammer Curls","3x10-12","No swinging"]
+],
+[
+["Goblet Squats","4x8-10","Chest up"],
+["RDLs","4x8-10","Hips back"],
+["Walking Lunges","3x10/leg","Long steps"]
+]
 ];
 
-let e=0,sets=0,totalSets=0;
+let workoutIndex=0;
+let exerciseIndex=0;
+let sets=0;
+let totalSets=0;
 
 /* ---------------- STORAGE ---------------- */
 
 let stats=JSON.parse(localStorage.getItem("stats")||`{
-"workouts":0,
-"sets":0,
-"last":"",
-"weights":{},
-"streak":0,
-"best":0
+"workouts":0,"sets":0,"last":"","weights":{},"streak":0,"best":0
 }`);
 
 /* ---------------- ELEMENTS ---------------- */
@@ -30,46 +208,13 @@ const workout=document.getElementById("workout");
 const statsDiv=document.getElementById("stats");
 const schedule=document.getElementById("schedule");
 
+const title=document.getElementById("title");
 const exEl=document.getElementById("exercise");
 const repsEl=document.getElementById("reps");
 const tipEl=document.getElementById("tip");
 const timerEl=document.getElementById("timer");
 const setsEl=document.getElementById("sets");
 const weightInput=document.getElementById("weightInput");
-const title=document.getElementById("title");
-
-/* ---------------- STREAK LOGIC ---------------- */
-
-function updateStreak(){
-
-const today=new Date();
-const todayStr=today.toDateString();
-
-if(!stats.last){
-stats.streak=1;
-}
-else{
-const last=new Date(stats.last);
-
-const diff=(today-last)/(1000*60*60*24);
-
-if(diff<1){
-/* same day → no change */
-}
-else if(diff<=2){
-stats.streak++;
-}
-else{
-stats.streak=1;
-}
-}
-
-if(stats.streak>stats.best){
-stats.best=stats.streak;
-}
-
-stats.last=todayStr;
-}
 
 /* ---------------- THEME ---------------- */
 
@@ -80,21 +225,33 @@ document.body.classList.toggle("light");
 /* ---------------- WORKOUT ---------------- */
 
 function startWorkout(i){
-home.style.display="none";
-workout.style.display="block";
-title.innerText=document.querySelectorAll("#home button")[i].innerText;
+workoutIndex=i;
+exerciseIndex=0;
 sets=0;
 totalSets=0;
-update();
+
+title.innerText=document.querySelectorAll("#home button")[i].innerText;
+
+home.style.display="none";
+workout.style.display="block";
+
+loadExercise();
 }
 
-function update(){
-const ex=workouts[e];
+function loadExercise(){
+const ex=workoutExercises[workoutIndex][exerciseIndex];
 exEl.innerText=ex[0];
 repsEl.innerText=ex[1];
 tipEl.innerText="";
-setsEl.innerText="Set "+sets;
+setsEl.innerText="Set 0";
 weightInput.value=stats.weights[ex[0]]||"";
+}
+
+function nextExercise(){
+if(exerciseIndex<workoutExercises[workoutIndex].length-1){
+exerciseIndex++;
+loadExercise();
+}
 }
 
 function addSet(){
@@ -104,15 +261,13 @@ setsEl.innerText="Set "+sets;
 }
 
 function showTip(){
-tipEl.innerText=workouts[e][2];
+tipEl.innerText=workoutExercises[workoutIndex][exerciseIndex][2];
 }
 
 /* ---------------- REST ---------------- */
 
 function startRest(){
 let t=90;
-timerEl.innerText="Rest: 90s";
-
 const interval=setInterval(()=>{
 t--;
 timerEl.innerText="Rest: "+t+"s";
@@ -121,10 +276,7 @@ if(t<=0){
 clearInterval(interval);
 timerEl.innerText="GO!";
 beep.play();
-
-if(navigator.vibrate){
-navigator.vibrate([200,100,200]);
-}
+if(navigator.vibrate) navigator.vibrate([200,100,200]);
 }
 },1000);
 }
@@ -132,44 +284,50 @@ navigator.vibrate([200,100,200]);
 /* ---------------- WEIGHTS ---------------- */
 
 function saveWeight(){
-stats.weights[workouts[e][0]]=weightInput.value;
+stats.weights[workoutExercises[workoutIndex][exerciseIndex][0]]=weightInput.value;
 localStorage.setItem("stats",JSON.stringify(stats));
 }
 
-/* ---------------- FINISH WORKOUT ---------------- */
+/* ---------------- STREAK ---------------- */
+
+function updateStreak(){
+const today=new Date();
+if(!stats.last){stats.streak=1;}
+else{
+const diff=(today-new Date(stats.last))/(1000*60*60*24);
+if(diff<=1){} else if(diff<=2) stats.streak++; else stats.streak=1;
+}
+stats.best=Math.max(stats.best,stats.streak);
+stats.last=today;
+}
+
+/* ---------------- FINISH ---------------- */
 
 function finishWorkout(){
-
 stats.workouts++;
 stats.sets+=totalSets;
-
 updateStreak();
-
 localStorage.setItem("stats",JSON.stringify(stats));
-
-alert("Workout logged! 🔥 Streak: "+stats.streak+" days");
-
+alert("Workout logged! 🔥 Streak: "+stats.streak);
 goHome();
 }
 
-/* ---------------- STATS SCREEN ---------------- */
+/* ---------------- STATS ---------------- */
 
 function showStats(){
 home.style.display="none";
 statsDiv.style.display="block";
 
-let html="";
-
+let weights="";
 for(let k in stats.weights){
-html+=k+": "+stats.weights[k]+"<br>";
+weights+=k+": "+stats.weights[k]+"<br>";
 }
 
 document.getElementById("statsContent").innerHTML=
-"<b>🔥 Current Streak:</b> "+stats.streak+" days<br>"+
-"<b>🏆 Best Streak:</b> "+stats.best+" days<br><br>"+
+"🔥 Current Streak: "+stats.streak+" days<br>"+
+"🏆 Best Streak: "+stats.best+" days<br><br>"+
 "Workouts: "+stats.workouts+"<br>"+
-"Total Sets: "+stats.sets+"<br><br>"+
-html;
+"Total Sets: "+stats.sets+"<br><br>"+weights;
 }
 
 /* ---------------- NAV ---------------- */
@@ -186,3 +344,6 @@ schedule.style.display="none";
 home.style.display="block";
 }
 </script>
+
+</body>
+</html>
