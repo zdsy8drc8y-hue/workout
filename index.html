@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Workout Pro</title>
 
 <style>
@@ -26,67 +25,62 @@
 
 body{
 margin:0;
-font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto;
+font-family:-apple-system,BlinkMacSystemFont,Segoe UI;
 background:var(--bg);
 color:var(--text);
 display:flex;
 justify-content:center;
 }
 
-.container{
-width:100%;
-max-width:420px;
-padding:18px;
-}
-
-h2,h3{text-align:center;}
+.container{max-width:420px;width:100%;padding:18px;}
 
 button{
 width:100%;
-padding:16px;
-margin:8px 0;
+padding:14px;
+margin:6px 0;
 border:none;
 border-radius:14px;
-font-size:16px;
 font-weight:600;
+font-size:15px;
 }
 
-.primary{background:var(--accent);color:white;}
+.primary{background:var(--accent);color:#fff;}
 .secondary{background:var(--card);color:var(--text);}
-.green{background:var(--green);color:white;}
-.danger{background:var(--danger);color:white;}
+.green{background:var(--green);color:#fff;}
+.danger{background:var(--danger);color:#fff;}
 
 .card{
 background:var(--card);
-padding:18px;
-border-radius:16px;
-margin-top:14px;
-box-shadow:0 6px 18px rgba(0,0,0,.25);
+padding:14px;
+border-radius:14px;
+margin-top:10px;
 }
 
+.timer{font-size:20px;color:var(--green);font-weight:bold;margin-top:6px;}
 .tip{color:var(--muted);font-size:14px;margin-top:6px;}
-
-.timer{
-font-size:26px;
-margin-top:8px;
-color:var(--green);
-font-weight:bold;
-}
-
-.controls{
-position:sticky;
-bottom:0;
-background:var(--bg);
-padding-top:10px;
-}
 
 input{
 width:100%;
-padding:12px;
+padding:10px;
 border-radius:10px;
 border:none;
-margin-top:8px;
-font-size:15px;
+margin-top:6px;
+}
+
+/* 🔥 FIRE ANIMATION */
+.fire{
+font-size:26px;
+text-align:center;
+transition:.2s;
+}
+.fire.big{font-size:40px;}
+.fire.pop{
+animation:pop .4s ease;
+}
+@keyframes pop{
+0%{transform:scale(1)}
+50%{transform:scale(1.5)}
+100%{transform:scale(1)}
 }
 </style>
 </head>
@@ -98,23 +92,32 @@ font-size:15px;
 <div id="home">
 <h2>🏋️ Workout Pro</h2>
 
+<div class="fire" id="fire">🔥 0</div>
+
 <button class="primary" onclick="startWorkout(0)">Arms & Chest – Strength & Mass</button>
 <button class="primary" onclick="startWorkout(1)">Back & Core – Total Pulling Power</button>
 <button class="primary" onclick="startWorkout(2)">Arms & Chest – Hypertrophy & Pump</button>
 <button class="primary" onclick="startWorkout(3)">Lower Body – Total Leg Development</button>
 
 <button class="secondary" onclick="showStats()">📈 Stats</button>
-<button class="secondary" onclick="showSchedule()">📅 Weekly Plan</button>
-<button class="secondary" onclick="toggleTheme()">🌗 Light / Dark</button>
+<button class="secondary" onclick="showCalendar()">📅 History</button>
+<button class="secondary" onclick="showTips()">💡 Tips</button>
+<button class="secondary" onclick="toggleUnits()">⚖️ Units: <span id="unitLabel">kg</span></button>
+<button class="secondary" onclick="toggleTheme()">🌗 Theme</button>
 </div>
 
 
 <!-- WORKOUT -->
 <div id="workout" style="display:none">
+
 <h3 id="title"></h3>
 
 <div class="card">
-<div id="exercise" style="font-size:20px;font-weight:700"></div>
+<div>⏱ Workout Time: <span id="workoutTimer">0:00</span></div>
+</div>
+
+<div class="card">
+<div id="exercise"></div>
 <div id="reps"></div>
 <div id="tip" class="tip"></div>
 
@@ -124,37 +127,39 @@ font-size:15px;
 <div id="sets">Set 0</div>
 </div>
 
-<div class="controls">
-<button class="green" onclick="addSet()">+ Add Set</button>
-<button class="secondary" onclick="startRest()">Start Rest</button>
+<button class="green" onclick="addSet()">+ Set</button>
+<button class="secondary" onclick="startRest()">Rest</button>
 <button class="secondary" onclick="showTip()">Tip</button>
 <button class="secondary" onclick="nextExercise()">Next Exercise</button>
 <button class="primary" onclick="saveWeight()">Save Weight</button>
 <button class="danger" onclick="finishWorkout()">Finish Workout</button>
 <button class="secondary" onclick="goHome()">Back</button>
 </div>
-</div>
 
 
 <!-- STATS -->
 <div id="stats" style="display:none">
-<h3>📈 Progress</h3>
 <div class="card" id="statsContent"></div>
 <button class="secondary" onclick="goHome()">Back</button>
 </div>
 
 
-<!-- SCHEDULE -->
-<div id="schedule" style="display:none">
-<h3>📅 Weekly Plan</h3>
+<!-- CALENDAR -->
+<div id="calendar" style="display:none">
+<div class="card" id="calendarContent"></div>
+<button class="secondary" onclick="goHome()">Back</button>
+</div>
+
+
+<!-- TIPS -->
+<div id="tips" style="display:none">
 <div class="card">
-Mon – Workout 1<br>
-Tue – Workout 2<br>
-Wed – Rest<br>
-Thu – Workout 3<br>
-Fri – Workout 4<br>
-Sat – Rest<br>
-Sun – Rest
+• Progressive overload weekly<br>
+• Rest 90s heavy sets<br>
+• Control form<br>
+• Eat protein<br>
+• Sleep well<br>
+• Stay consistent 🔥
 </div>
 <button class="secondary" onclick="goHome()">Back</button>
 </div>
@@ -165,185 +170,167 @@ Sun – Rest
 <script>
 const beep=new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
 
-/* ---------------- WORKOUT DATA ---------------- */
+/* -------- REST DAYS -------- */
+const restDays=[3,6,0]; // Wed Sat Sun
 
-const workoutExercises=[
+/* -------- FULL WORKOUTS -------- */
+const workouts=[
 [
-["Dumbbell Bench Press","4x6-8","Press through chest"],
-["Incline Dumbbell Press","3x8-10","Control tempo"],
-["Overhead Press","3x8-10","Brace core"]
+["Dumbbell Bench Press","4x6-8","Go heavy"],
+["Incline DB Press","3x8-10","Upper chest"],
+["Floor Press","3x8-10","Triceps"],
+["Dips","3x8-12","Chest focus"]
 ],
 [
-["Bent Over Rows","4x6-8","Squeeze lats"],
-["Pullovers","3x10-12","Big stretch"],
-["Russian Twists","3x10/side","Stay tight"]
+["Rows","4x6-8","Pull tight"],
+["Pulldowns","4x10-12","Lead with lats"],
+["Pullovers","3x10-12","Stretch"],
+["Core Rollouts","3x8-12","Slow control"]
 ],
 [
-["Incline Press","4x10-12","Slow negatives"],
-["Flyes","3x12-15","Full stretch"],
-["Hammer Curls","3x10-12","No swinging"]
+["Incline Press","4x10-12","Volume"],
+["Flyes","3x12-15","Stretch"],
+["Hammer Curls","3x10-12","Arms"],
+["Pushdowns","4x15-20","Pump"]
 ],
 [
-["Goblet Squats","4x8-10","Chest up"],
-["RDLs","4x8-10","Hips back"],
-["Walking Lunges","3x10/leg","Long steps"]
+["Squats","4x8-10","Depth"],
+["RDLs","4x8-10","Hamstrings"],
+["Lunges","3x10 each","Balance"],
+["Calf Raises","5x15-20","Full stretch"]
 ]
 ];
 
-let workoutIndex=0;
-let exerciseIndex=0;
-let sets=0;
-let totalSets=0;
+let wi=0,ei=0,sets=0,totalSets=0;
+let workoutInterval;
 
-/* ---------------- STORAGE ---------------- */
-
+/* -------- STORAGE -------- */
 let stats=JSON.parse(localStorage.getItem("stats")||`{
-"workouts":0,"sets":0,"last":"","weights":{},"streak":0,"best":0
+"workouts":0,"sets":0,"history":[],"weights":{},"streak":0,"best":0,"unit":"kg","last":""
 }`);
 
-/* ---------------- ELEMENTS ---------------- */
-
-const home=document.getElementById("home");
-const workout=document.getElementById("workout");
-const statsDiv=document.getElementById("stats");
-const schedule=document.getElementById("schedule");
-
-const title=document.getElementById("title");
-const exEl=document.getElementById("exercise");
-const repsEl=document.getElementById("reps");
-const tipEl=document.getElementById("tip");
-const timerEl=document.getElementById("timer");
-const setsEl=document.getElementById("sets");
-const weightInput=document.getElementById("weightInput");
-
-/* ---------------- THEME ---------------- */
-
-function toggleTheme(){
-document.body.classList.toggle("light");
+/* -------- HELPERS -------- */
+function save(){localStorage.setItem("stats",JSON.stringify(stats));}
+function show(id){
+["home","workout","stats","calendar","tips"].forEach(x=>document.getElementById(x).style.display="none");
+document.getElementById(id).style.display="block";
 }
 
-/* ---------------- WORKOUT ---------------- */
+/* -------- FIRE DISPLAY -------- */
+function updateFire(){
+fire.innerText="🔥 "+stats.streak;
+if(stats.streak>=5) fire.classList.add("big");
+}
 
+/* -------- WORKOUT TIMER -------- */
+function startWorkoutTimer(){
+let seconds=0;
+workoutInterval=setInterval(()=>{
+seconds++;
+const m=Math.floor(seconds/60);
+const s=(seconds%60).toString().padStart(2,"0");
+workoutTimer.innerText=`${m}:${s}`;
+},1000);
+}
+
+/* -------- WORKOUT FLOW -------- */
 function startWorkout(i){
-workoutIndex=i;
-exerciseIndex=0;
-sets=0;
-totalSets=0;
-
-title.innerText=document.querySelectorAll("#home button")[i].innerText;
-
-home.style.display="none";
-workout.style.display="block";
-
-loadExercise();
+wi=i;ei=0;sets=0;totalSets=0;
+title.innerText=document.querySelectorAll("#home button")[i+1].innerText;
+show("workout");
+load();
+startWorkoutTimer();
 }
 
-function loadExercise(){
-const ex=workoutExercises[workoutIndex][exerciseIndex];
-exEl.innerText=ex[0];
-repsEl.innerText=ex[1];
-tipEl.innerText="";
+function load(){
+let ex=workouts[wi][ei];
+exercise.innerText=ex[0];
+reps.innerText=ex[1];
+tip.innerText="";
 setsEl.innerText="Set 0";
 weightInput.value=stats.weights[ex[0]]||"";
 }
 
-function nextExercise(){
-if(exerciseIndex<workoutExercises[workoutIndex].length-1){
-exerciseIndex++;
-loadExercise();
-}
-}
+function nextExercise(){if(ei<workouts[wi].length-1){ei++;load();}}
+function addSet(){sets++;totalSets++;setsEl.innerText="Set "+sets;}
+function showTip(){tip.innerText=workouts[wi][ei][2];}
 
-function addSet(){
-sets++;
-totalSets++;
-setsEl.innerText="Set "+sets;
-}
-
-function showTip(){
-tipEl.innerText=workoutExercises[workoutIndex][exerciseIndex][2];
-}
-
-/* ---------------- REST ---------------- */
-
+/* -------- REST -------- */
 function startRest(){
 let t=90;
-const interval=setInterval(()=>{
+const i=setInterval(()=>{
 t--;
-timerEl.innerText="Rest: "+t+"s";
-
+timer.innerText="Rest: "+t+"s";
 if(t<=0){
-clearInterval(interval);
-timerEl.innerText="GO!";
+clearInterval(i);
+timer.innerText="GO!";
 beep.play();
-if(navigator.vibrate) navigator.vibrate([200,100,200]);
+navigator.vibrate&&navigator.vibrate(300);
 }
 },1000);
 }
 
-/* ---------------- WEIGHTS ---------------- */
+/* -------- WEIGHT CONVERTER -------- */
+function toggleUnits(){
+stats.unit=stats.unit==="kg"?"lb":"kg";
+unitLabel.innerText=stats.unit;
+save();
+}
 
 function saveWeight(){
-stats.weights[workoutExercises[workoutIndex][exerciseIndex][0]]=weightInput.value;
-localStorage.setItem("stats",JSON.stringify(stats));
-}
+let val=weightInput.value.toLowerCase();
+let num=parseFloat(val);
+if(!num)return;
 
-/* ---------------- STREAK ---------------- */
+let kg,lb;
 
-function updateStreak(){
-const today=new Date();
-if(!stats.last){stats.streak=1;}
+if(val.includes("lb")){lb=num;kg=lb/2.20462;}
+else if(val.includes("kg")){kg=num;lb=kg*2.20462;}
 else{
-const diff=(today-new Date(stats.last))/(1000*60*60*24);
-if(diff<=1){} else if(diff<=2) stats.streak++; else stats.streak=1;
+if(stats.unit==="kg"){kg=num;lb=kg*2.20462;}
+else{lb=num;kg=lb/2.20462;}
 }
+
+kg=kg.toFixed(1);lb=lb.toFixed(1);
+let display=`${kg} kg (${lb} lb)`;
+stats.weights[workouts[wi][ei][0]]=display;
+weightInput.value=display;
+save();
+}
+
+/* -------- STREAK -------- */
+function updateStreak(){
+const today=new Date().toDateString();
+
+if(stats.last===today) return;
+
+let broken=false;
+let last=new Date(stats.last||today);
+
+for(let d=new Date(last); d<new Date(); d.setDate(d.getDate()+1)){
+if(!restDays.includes(d.getDay()) && !stats.history.includes(d.toDateString()))
+broken=true;
+}
+
+if(broken) stats.streak=1;
+else stats.streak++;
+
 stats.best=Math.max(stats.best,stats.streak);
 stats.last=today;
+stats.history.push(today);
+updateFire();
 }
 
-/* ---------------- FINISH ---------------- */
-
+/* -------- FINISH -------- */
 function finishWorkout(){
+clearInterval(workoutInterval);
 stats.workouts++;
 stats.sets+=totalSets;
 updateStreak();
-localStorage.setItem("stats",JSON.stringify(stats));
-alert("Workout logged! 🔥 Streak: "+stats.streak);
-goHome();
-}
+save();
 
-/* ---------------- STATS ---------------- */
+fire.classList.add("pop");
+setTimeout(()=>fire.classList.remove("pop"),400);
 
-function showStats(){
-home.style.display="none";
-statsDiv.style.display="block";
-
-let weights="";
-for(let k in stats.weights){
-weights+=k+": "+stats.weights[k]+"<br>";
-}
-
-document.getElementById("statsContent").innerHTML=
-"🔥 Current Streak: "+stats.streak+" days<br>"+
-"🏆 Best Streak: "+stats.best+" days<br><br>"+
-"Workouts: "+stats.workouts+"<br>"+
-"Total Sets: "+stats.sets+"<br><br>"+weights;
-}
-
-/* ---------------- NAV ---------------- */
-
-function showSchedule(){
-home.style.display="none";
-schedule.style.display="block";
-}
-
-function goHome(){
-workout.style.display="none";
-statsDiv.style.display="none";
-schedule.style.display="none";
-home.style.display="block";
-}
-</script>
-
-</body>
-</html>
+alert("Workout logged 🔥");
+goHome
