@@ -94,7 +94,9 @@ animation:pop .4s ease;
 <div id="exercise"></div>
 <div id="reps"></div>
 <div id="tip" class="tip"></div>
+
 <input id="weightInput" placeholder="Weight used">
+
 <div class="timer" id="timer">Rest: 90s</div>
 <div id="sets">Set 0</div>
 </div>
@@ -135,11 +137,48 @@ animation:pop .4s ease;
 <script>
 const beep=new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
 const restDays=[3,6,0]; // Wed, Sat, Sun
+
 const workouts=[
-[["Dumbbell Bench Press","4x6-8","Go heavy"],["Incline DB Press","3x8-10","Upper chest"],["Kettlebell Floor Press","3x8-10 each","Triceps"],["Weighted Dips","3x8-12","Chest focus"],["Seated Overhead Press","3x8-10","Brace core"],["Dumbbell Bicep Curls","3x8-10","Slow negatives"],["Overhead Tricep Extension","3x10-12","Full stretch"],["Banded Face Pulls","3x15-20","Shoulder health"]],
-[["Bent-Over Rows","4x6-8","Squeeze lats"],["Single Arm Rows","3x8-10 each","Big squeeze"],["Banded Lat Pulldown","4x10-12","Lead with lats"],["Kettlebell Renegade Rows","3x6-8 each","Core tight"],["Dumbbell Pullovers","3x10-12","Lat stretch"],["Ab Wheel Rollouts","3x8-12","Slow control"],["Dumbbell Russian Twists","3x10 each","Rotate torso"],["Kettlebell Suitcase Carries","3x40ft each","Grip + core"]],
-[["Incline Dumbbell Press","4x10-12","High volume"],["Banded Chest Press","3x15-20","Constant tension"],["Dumbbell Flyes","3x12-15","Deep stretch"],["Close Grip Dumbbell Press","3x10-12","Triceps focus"],["Kettlebell Strict Press","3x8-10 each","No leg drive"],["Dumbbell Hammer Curls","3x10-12","Neutral grip"],["Banded Tricep Pushdowns","4x15-20","Lockout squeeze"],["Concentration Curls","3x10-15 each","Peak contraction"]],
-[["Goblet Squats","4x8-10","Deep squat"],["Dumbbell RDLs","4x8-10","Hamstrings"],["Bulgarian Split Squats","3x8-10 each","Balance + strength"],["Kettlebell Swings","4x15-20","Explosive hips"],["Dumbbell Hip Thrusts","3x10-15","Glutes"],["Walking Lunges","3x10-12 each","Long steps"],["Banded Squats","3x15","Constant tension"],["Standing Calf Raises","5x15-20","Full stretch"]]
+[
+["Dumbbell Bench Press","4x6-8","Go heavy"],
+["Incline DB Press","3x8-10","Upper chest"],
+["Kettlebell Floor Press","3x8-10 each","Triceps"],
+["Weighted Dips","3x8-12","Chest focus"],
+["Seated Overhead Press","3x8-10","Brace core"],
+["Dumbbell Bicep Curls","3x8-10","Slow negatives"],
+["Overhead Tricep Extension","3x10-12","Full stretch"],
+["Banded Face Pulls","3x15-20","Shoulder health"]
+],
+[
+["Bent-Over Rows","4x6-8","Squeeze lats"],
+["Single Arm Rows","3x8-10 each","Big squeeze"],
+["Banded Lat Pulldown","4x10-12","Lead with lats"],
+["Kettlebell Renegade Rows","3x6-8 each","Core tight"],
+["Dumbbell Pullovers","3x10-12","Lat stretch"],
+["Ab Wheel Rollouts","3x8-12","Slow control"],
+["Dumbbell Russian Twists","3x10 each","Rotate torso"],
+["Kettlebell Suitcase Carries","3x40ft each","Grip + core"]
+],
+[
+["Incline Dumbbell Press","4x10-12","High volume"],
+["Banded Chest Press","3x15-20","Constant tension"],
+["Dumbbell Flyes","3x12-15","Deep stretch"],
+["Close Grip Dumbbell Press","3x10-12","Triceps focus"],
+["Kettlebell Strict Press","3x8-10 each","No leg drive"],
+["Dumbbell Hammer Curls","3x10-12","Neutral grip"],
+["Banded Tricep Pushdowns","4x15-20","Lockout squeeze"],
+["Concentration Curls","3x10-15 each","Peak contraction"]
+],
+[
+["Goblet Squats","4x8-10","Deep squat"],
+["Dumbbell RDLs","4x8-10","Hamstrings"],
+["Bulgarian Split Squats","3x8-10 each","Balance + strength"],
+["Kettlebell Swings","4x15-20","Explosive hips"],
+["Dumbbell Hip Thrusts","3x10-15","Glutes"],
+["Walking Lunges","3x10-12 each","Long steps"],
+["Banded Squats","3x15","Constant tension"],
+["Standing Calf Raises","5x15-20","Full stretch"]
+]
 ];
 
 let wi=0,ei=0,sets=0,totalSets=0,workoutInterval;
@@ -164,49 +203,44 @@ const workoutTimer=document.getElementById("workoutTimer");
 const statsContent=document.getElementById("statsContent");
 const calendarContent=document.getElementById("calendarContent");
 
-/* -------- HELPERS -------- */
+/* HELPERS */
 function save(){localStorage.setItem("stats",JSON.stringify(stats));}
 function show(id){
-home.style.display="none";
-workout.style.display="none";
-statsDiv.style.display="none";
-calendarDiv.style.display="none";
-tipsDiv.style.display="none";
+home.style.display="none"; workout.style.display="none"; statsDiv.style.display="none";
+calendarDiv.style.display="none"; tipsDiv.style.display="none";
 document.getElementById(id).style.display="block";
 }
-
-/* -------- FIRE & STREAK -------- */
 function updateFire(){fire.innerText="🔥 "+stats.streak; fire.classList.remove("big"); if(stats.streak>=5) fire.classList.add("big");}
 updateFire();
 unitLabel.innerText=stats.unit;
 
-/* -------- WORKOUT TIMER -------- */
-function startWorkoutTimer(){let seconds=0;workoutInterval=setInterval(()=>{seconds++;let m=Math.floor(seconds/60);let s=(seconds%60).toString().padStart(2,"0");workoutTimer.innerText=`${m}:${s}`;},1000);}
+/* WORKOUT TIMER */
+function startWorkoutTimer(){let seconds=0; workoutInterval=setInterval(()=>{seconds++; let m=Math.floor(seconds/60); let s=(seconds%60).toString().padStart(2,"0"); workoutTimer.innerText=`${m}:${s}`;},1000);}
 function stopWorkoutTimer(){clearInterval(workoutInterval);}
 
-/* -------- WORKOUT FLOW -------- */
-function startWorkout(i){wi=i;ei=0;sets=0;totalSets=0;title.innerText=document.querySelectorAll("#home button")[i].innerText;show("workout");loadExercise();startWorkoutTimer();}
-function loadExercise(){let ex=workouts[wi][ei];exercise.innerText=ex[0];repsEl.innerText=ex[1];tip.innerText="";setsEl.innerText="Set 0";weightInput.value=stats.weights[ex[0]]||"";}
-function nextExercise(){if(ei<workouts[wi].length-1){ei++;sets=0;loadExercise();}}
-function addSet(){sets++;totalSets++;setsEl.innerText="Set "+sets;}
+/* WORKOUT FLOW */
+function startWorkout(i){wi=i;ei=0;sets=0;totalSets=0; title.innerText=document.querySelectorAll("#home button")[i].innerText; show("workout"); loadExercise(); startWorkoutTimer();}
+function loadExercise(){let ex=workouts[wi][ei]; exercise.innerText=ex[0]; repsEl.innerText=ex[1]; tip.innerText=""; setsEl.innerText="Set 0"; weightInput.value=stats.weights[ex[0]]||"";}
+function nextExercise(){if(ei<workouts[wi].length-1){ei++; sets=0; loadExercise();}}
+function addSet(){sets++; totalSets++; setsEl.innerText="Set "+sets;}
 function showTip(){tip.innerText=workouts[wi][ei][2];}
 
-/* -------- REST -------- */
-function startRest(){let t=90;const i=setInterval(()=>{t--;timerEl.innerText="Rest: "+t+"s";if(t<=0){clearInterval(i);timerEl.innerText="GO!";beep.play();navigator.vibrate&&navigator.vibrate(300);}},1000);}
+/* REST */
+function startRest(){let t=90; const i=setInterval(()=>{t--; timerEl.innerText="Rest: "+t+"s"; if(t<=0){clearInterval(i);timerEl.innerText="GO!"; beep.play(); navigator.vibrate&&navigator.vibrate(300);}},1000);}
 
-/* -------- WEIGHT CONVERTER -------- */
-function toggleUnits(){stats.unit=stats.unit==="kg"?"lb":"kg";unitLabel.innerText=stats.unit;save();}
-function saveWeight(){let val=weightInput.value.trim().toLowerCase();let num=parseFloat(val);if(!num)return;let kg,lb;if(val.includes("lb")){lb=num;kg=lb/2.20462;}else if(val.includes("kg")){kg=num;lb=kg*2.20462;}else{if(stats.unit==="kg"){kg=num;lb=kg*2.20462;}else{lb=num;kg=lb/2.20462;}}kg=kg.toFixed(1);lb=lb.toFixed(1);let display=`${kg} kg (${lb} lb)`;stats.weights[workouts[wi][ei][0]]=display;weightInput.value=display;save();}
+/* WEIGHT CONVERTER */
+function toggleUnits(){stats.unit=stats.unit==="kg"?"lb":"kg"; unitLabel.innerText=stats.unit; save();}
+function saveWeight(){let val=weightInput.value.trim().toLowerCase(); let num=parseFloat(val); if(!num)return; let kg,lb; if(val.includes("lb")){lb=num; kg=lb/2.20462;} else if(val.includes("kg")){kg=num; lb=kg*2.20462;} else {if(stats.unit==="kg"){kg=num; lb=kg*2.20462;} else {lb=num; kg=lb/2.20462;}} kg=kg.toFixed(1); lb=lb.toFixed(1); let display=`${kg} kg (${lb} lb)`; stats.weights[workouts[wi][ei][0]]=display; weightInput.value=display; save();}
 
-/* -------- STREAK -------- */
-function updateStreak(){const today=new Date().toDateString();if(stats.last===today)return;let broken=false;let last=new Date(stats.last||today);for(let d=new Date(last); d<new Date(); d.setDate(d.getDate()+1)){if(!restDays.includes(d.getDay()) && !stats.history.includes(d.toDateString())) broken=true;}if(broken) stats.streak=1; else stats.streak++;stats.best=Math.max(stats.best,stats.streak);stats.last=today;stats.history.push(today);updateFire();}
+/* STREAK */
+function updateStreak(){const today=new Date().toDateString(); if(stats.last===today) return; let broken=false; let last=new Date(stats.last||today); for(let d=new Date(last); d<new Date(); d.setDate(d.getDate()+1)){if(!restDays.includes(d.getDay()) && !stats.history.includes(d.toDateString())) broken=true;} if(broken) stats.streak=1; else stats.streak++; stats.best=Math.max(stats.best,stats.streak); stats.last=today; stats.history.push(today); updateFire();}
 
-/* -------- FINISH -------- */
-function finishWorkout(){stopWorkoutTimer();stats.workouts++;stats.sets+=totalSets;updateStreak();save();fire.classList.add("pop");setTimeout(()=>fire.classList.remove("pop"),400);alert("Workout logged 🔥");goHome();}
+/* FINISH WORKOUT */
+function finishWorkout(){stopWorkoutTimer(); stats.workouts++; stats.sets+=totalSets; updateStreak(); save(); fire.classList.add("pop"); setTimeout(()=>fire.classList.remove("pop"),400); alert("Workout logged 🔥"); goHome();}
 
-/* -------- SCREENS -------- */
-function showStats(){show("stats");statsContent.innerHTML="🔥 Streak: "+stats.streak+"<br>🏆 Best: "+stats.best+"<br>Workouts: "+stats.workouts+"<br>Sets: "+stats.sets;}
-function showCalendar(){show("calendar");calendarContent.innerHTML=stats.history.map(d=>"✅ "+d).join("<br>");}
+/* SCREENS */
+function showStats(){show("stats"); statsContent.innerHTML="🔥 Streak: "+stats.streak+"<br>🏆 Best: "+stats.best+"<br>Workouts: "+stats.workouts+"<br>Sets: "+stats.sets;}
+function showCalendar(){show("calendar"); calendarContent.innerHTML=stats.history.map(d=>"✅ "+d).join("<br>");}
 function showTips(){show("tips");}
 function toggleTheme(){document.body.classList.toggle("light");}
 function goHome(){show("home");}
