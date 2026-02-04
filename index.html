@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Workout Pro</title>
+<title>Workout AI Pro</title>
 
 <style>
 :root{
@@ -11,264 +11,220 @@
 --text:#fff;
 --accent:#3b82f6;
 --green:#22c55e;
---danger:#ef4444;
---muted:#94a3b8;
 }
+
 .light{
 --bg:#f2f2f7;
---card:#ffffff;
+--card:#fff;
 --text:#111;
 }
 
 body{
 margin:0;
-font-family:-apple-system,BlinkMacSystemFont,Segoe UI;
+font-family:-apple-system;
 background:var(--bg);
 color:var(--text);
-display:flex;
-justify-content:center;
 }
 
 .container{
-width:100%;
-max-width:420px;
-padding:18px;
+max-width:430px;
+margin:auto;
+padding:16px;
+}
+
+.card{
+background:var(--card);
+padding:16px;
+border-radius:14px;
+margin-top:12px;
 }
 
 button{
 width:100%;
 padding:14px;
-margin:6px 0;
-border-radius:14px;
-border:none;
-font-weight:600;
-}
-
-.primary{background:var(--accent);color:#fff;}
-.secondary{background:var(--card);color:var(--text);}
-.green{background:var(--green);color:#fff;}
-.danger{background:var(--danger);color:#fff;}
-
-.card{
-background:var(--card);
-padding:14px;
-border-radius:14px;
 margin-top:10px;
+border:none;
+border-radius:12px;
+font-weight:600;
+background:var(--accent);
+color:white;
 }
 
-.fire{
-text-align:center;
-font-size:28px;
+.secondary{background:var(--card);color:var(--text);}
+.green{background:var(--green)}
+
+.hidden{display:none}
+
+input[type=checkbox]{
+margin-right:8px;
 }
 
-.timer{font-weight:bold;color:var(--green);}
-.tip{font-size:14px;color:var(--muted);}
+.timer{color:var(--green);font-weight:bold}
 </style>
 </head>
 
 <body>
 <div class="container">
 
+<!-- SETUP -->
+<div id="setup">
+<h2>Choose Your Equipment</h2>
+
+<div class="card">
+<label><input type="checkbox" value="bench"> Bench</label><br>
+<label><input type="checkbox" value="dumbbell"> Dumbbells</label><br>
+<label><input type="checkbox" value="band"> Bands</label><br>
+<label><input type="checkbox" value="kettlebell"> Kettlebell</label><br>
+<label><input type="checkbox" value="body"> Bodyweight</label>
+</div>
+
+<button onclick="saveEquipment()">Start App</button>
+</div>
+
+
 <!-- HOME -->
-<div id="homeScreen">
-<h2>🏋️ Workout Pro</h2>
-<div class="fire" id="fire">🔥 0</div>
+<div id="home" class="hidden">
+<h2>🏋️ Workout AI</h2>
 
-<button class="primary" onclick="startWorkout(0)">Workout 1</button>
-<button class="primary" onclick="startWorkout(1)">Workout 2</button>
-<button class="primary" onclick="startWorkout(2)">Workout 3</button>
-<button class="primary" onclick="startWorkout(3)">Workout 4</button>
+<button onclick="startWorkout(0)">Day 1 – Upper</button>
+<button onclick="startWorkout(1)">Day 2 – Pull</button>
+<button onclick="startWorkout(2)">Day 3 – Push Pump</button>
+<button onclick="startWorkout(3)">Day 4 – Legs</button>
 
-<button class="secondary" onclick="showStats()">Stats</button>
 <button class="secondary" onclick="toggleTheme()">Theme</button>
+<button class="secondary" onclick="resetEquipment()">Change Equipment</button>
 </div>
 
 
 <!-- WORKOUT -->
-<div id="workoutScreen" style="display:none">
+<div id="workout" class="hidden">
 
 <h3 id="title"></h3>
 
 <div class="card">
-⏱ <span id="workoutTimer">0:00</span>
-</div>
-
-<div class="card">
 <div id="exercise"></div>
 <div id="reps"></div>
-<div class="tip" id="tip"></div>
-<div id="sets">Set 0</div>
-<div class="timer" id="restTimer">Rest: 90s</div>
+<div class="timer" id="timer">0:00</div>
 </div>
 
-<button class="green" onclick="addSet()">+ Set</button>
-<button class="secondary" onclick="startRest()">Rest</button>
-<button class="secondary" onclick="nextExercise()">Next</button>
-<button class="danger" onclick="finishWorkout()">Finish</button>
-<button class="secondary" onclick="goHome()">Back</button>
-
-</div>
-
-
-<!-- STATS -->
-<div id="statsScreen" style="display:none">
-<div class="card" id="statsText"></div>
+<button class="green" onclick="nextExercise()">Next</button>
 <button class="secondary" onclick="goHome()">Back</button>
 </div>
 
 </div>
-
 
 <script>
 
-/* ---------- DATA ---------- */
+/* ---------- EXERCISE DATABASE ---------- */
 
-const workouts = [
-[
-["Bench Press","4x6-8","Go heavy"],
-["Incline Press","3x8-10","Upper chest"],
-["Curls","3x10","Slow reps"]
-],
-[
-["Rows","4x6-8","Pull tight"],
-["Pulldowns","3x10-12","Squeeze lats"]
-],
-[
-["Flyes","3x12-15","Stretch chest"]
-],
-[
-["Squats","4x8-10","Deep squat"]
-]
+const db = [
+
+{ name:"DB Bench Press", equip:["bench","dumbbell"], day:0, reps:"4x8" },
+{ name:"Pushups", equip:["body"], day:0, reps:"4x15" },
+
+{ name:"DB Rows", equip:["dumbbell"], day:1, reps:"4x8" },
+{ name:"Band Pulldown", equip:["band"], day:1, reps:"4x12" },
+
+{ name:"DB Flyes", equip:["bench","dumbbell"], day:2, reps:"3x12" },
+
+{ name:"Goblet Squat", equip:["kettlebell","dumbbell"], day:3, reps:"4x10" },
+{ name:"Bodyweight Squat", equip:["body"], day:3, reps:"4x20" }
+
 ];
 
 /* ---------- STATE ---------- */
 
-let wi=0, ei=0, setCount=0;
-let timerSeconds=0, timerInterval=null;
+let equipment = JSON.parse(localStorage.getItem("equip")||"null");
+let workouts=[];
+let ei=0;
 
-let stats = JSON.parse(localStorage.getItem("stats")||`{
-"workouts":0,
-"sets":0,
-"streak":0
-}`);
+let seconds=0, interval;
 
-/* ---------- HELPERS ---------- */
+/* ---------- BUILD WORKOUTS ---------- */
 
-function save(){
-localStorage.setItem("stats",JSON.stringify(stats));
+function buildWorkouts(){
+workouts=[[],[],[],[]];
+
+db.forEach(ex=>{
+if(ex.equip.some(e=>equipment.includes(e))){
+workouts[ex.day].push(ex);
+}
+});
 }
 
-function hideAll(){
-document.getElementById("homeScreen").style.display="none";
-document.getElementById("workoutScreen").style.display="none";
-document.getElementById("statsScreen").style.display="none";
+/* ---------- SETUP ---------- */
+
+function saveEquipment(){
+equipment=[...document.querySelectorAll("input:checked")].map(x=>x.value);
+localStorage.setItem("equip",JSON.stringify(equipment));
+startApp();
 }
 
-/* ---------- TIMER ---------- */
-
-function startTimer(){
-if(timerInterval) clearInterval(timerInterval);
-timerSeconds=0;
-
-timerInterval=setInterval(()=>{
-timerSeconds++;
-let m=Math.floor(timerSeconds/60);
-let s=(timerSeconds%60).toString().padStart(2,"0");
-document.getElementById("workoutTimer").textContent=m+":"+s;
-},1000);
+function resetEquipment(){
+localStorage.removeItem("equip");
+location.reload();
 }
 
-function stopTimer(){
-clearInterval(timerInterval);
+/* ---------- APP START ---------- */
+
+function startApp(){
+document.getElementById("setup").classList.add("hidden");
+document.getElementById("home").classList.remove("hidden");
+buildWorkouts();
 }
 
-/* ---------- WORKOUT FLOW ---------- */
+if(equipment) startApp();
 
-function startWorkout(index){
-wi=index;
+/* ---------- WORKOUT ---------- */
+
+function startWorkout(day){
 ei=0;
-setCount=0;
 
-hideAll();
-document.getElementById("workoutScreen").style.display="block";
+document.getElementById("home").classList.add("hidden");
+document.getElementById("workout").classList.remove("hidden");
 
-document.getElementById("title").textContent="Workout "+(index+1);
+title.textContent="Workout "+(day+1);
 
-loadExercise();
-startTimer();
+showExercise(day);
+
+seconds=0;
+interval=setInterval(()=>{
+seconds++;
+let m=Math.floor(seconds/60);
+let s=(seconds%60).toString().padStart(2,"0");
+timer.textContent=m+":"+s;
+},1000);
+
+currentDay=day;
 }
 
-function loadExercise(){
-let ex = workouts[wi][ei];
-
-document.getElementById("exercise").textContent=ex[0];
-document.getElementById("reps").textContent=ex[1];
-document.getElementById("tip").textContent=ex[2];
-document.getElementById("sets").textContent="Set 0";
+function showExercise(day){
+if(!workouts[day].length){
+exercise.textContent="No exercises for your equipment";
+reps.textContent="";
+return;
 }
 
-function addSet(){
-setCount++;
-stats.sets++;
-document.getElementById("sets").textContent="Set "+setCount;
-save();
+let ex=workouts[day][ei];
+exercise.textContent=ex.name;
+reps.textContent=ex.reps;
 }
 
 function nextExercise(){
-if(ei < workouts[wi].length-1){
 ei++;
-setCount=0;
-loadExercise();
+if(ei>=workouts[currentDay].length) ei=0;
+showExercise(currentDay);
 }
-}
-
-function startRest(){
-let t=90;
-const el=document.getElementById("restTimer");
-
-const i=setInterval(()=>{
-t--;
-el.textContent="Rest: "+t+"s";
-if(t<=0){
-clearInterval(i);
-el.textContent="GO!";
-navigator.vibrate && navigator.vibrate(200);
-}
-},1000);
-}
-
-function finishWorkout(){
-stopTimer();
-stats.workouts++;
-stats.streak++;
-save();
-
-document.getElementById("fire").textContent="🔥 "+stats.streak;
-
-goHome();
-}
-
-/* ---------- SCREENS ---------- */
 
 function goHome(){
-hideAll();
-document.getElementById("homeScreen").style.display="block";
-}
-
-function showStats(){
-hideAll();
-document.getElementById("statsScreen").style.display="block";
-document.getElementById("statsText").innerHTML=
-"Workouts: "+stats.workouts+"<br>"+
-"Sets: "+stats.sets+"<br>"+
-"Streak: "+stats.streak;
+clearInterval(interval);
+document.getElementById("workout").classList.add("hidden");
+document.getElementById("home").classList.remove("hidden");
 }
 
 function toggleTheme(){
 document.body.classList.toggle("light");
 }
-
-document.getElementById("fire").textContent="🔥 "+stats.streak;
 
 </script>
 </body>
