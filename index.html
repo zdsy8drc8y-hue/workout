@@ -1,27 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Workout AI Pro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Workout Builder Pro</title>
 
 <style>
 :root{
 --bg:#0f172a;
 --card:#1e293b;
 --text:#fff;
---accent:#3b82f6;
---green:#22c55e;
+--accent:#4f46e5;
+--muted:#94a3b8;
 }
 
 .light{
---bg:#f2f2f7;
+--bg:#f5f5f7;
 --card:#fff;
 --text:#111;
 }
 
 body{
 margin:0;
-font-family:-apple-system;
+font-family:-apple-system,system-ui;
 background:var(--bg);
 color:var(--text);
 }
@@ -29,14 +29,17 @@ color:var(--text);
 .container{
 max-width:430px;
 margin:auto;
-padding:16px;
+padding:18px;
 }
+
+h2{margin:8px 0 16px}
 
 .card{
 background:var(--card);
 padding:16px;
-border-radius:14px;
-margin-top:12px;
+border-radius:18px;
+margin-top:14px;
+box-shadow:0 8px 25px rgba(0,0,0,.25);
 }
 
 button{
@@ -44,22 +47,23 @@ width:100%;
 padding:14px;
 margin-top:10px;
 border:none;
-border-radius:12px;
+border-radius:14px;
 font-weight:600;
 background:var(--accent);
 color:white;
 }
 
-.secondary{background:var(--card);color:var(--text);}
-.green{background:var(--green)}
-
+.secondary{background:var(--card);color:var(--text)}
+.small{font-size:14px;color:var(--muted)}
 .hidden{display:none}
-
-input[type=checkbox]{
-margin-right:8px;
+input,select{
+width:100%;
+padding:12px;
+border-radius:12px;
+border:none;
+margin-top:8px;
+font-size:16px;
 }
-
-.timer{color:var(--green);font-weight:bold}
 </style>
 </head>
 
@@ -68,46 +72,57 @@ margin-right:8px;
 
 <!-- SETUP -->
 <div id="setup">
-<h2>Choose Your Equipment</h2>
 
-<div class="card">
+<h2>Setup Your Gym</h2>
+
+<div class="card" id="equipList">
 <label><input type="checkbox" value="bench"> Bench</label><br>
 <label><input type="checkbox" value="dumbbell"> Dumbbells</label><br>
+<label><input type="checkbox" value="barbell"> Barbell</label><br>
+<label><input type="checkbox" value="rack"> Squat Rack</label><br>
 <label><input type="checkbox" value="band"> Bands</label><br>
 <label><input type="checkbox" value="kettlebell"> Kettlebell</label><br>
+<label><input type="checkbox" value="machine"> Machines</label><br>
 <label><input type="checkbox" value="body"> Bodyweight</label>
 </div>
 
-<button onclick="saveEquipment()">Start App</button>
+<div class="card">
+<div class="small">Days per week</div>
+<select id="days">
+<option value="2">2 days</option>
+<option value="3">3 days</option>
+<option value="4" selected>4 days</option>
+<option value="5">5 days</option>
+<option value="6">6 days</option>
+<option value="7">7 days</option>
+</select>
+</div>
+
+<button onclick="saveSetup()">Build My Plan</button>
 </div>
 
 
 <!-- HOME -->
 <div id="home" class="hidden">
-<h2>🏋️ Workout AI</h2>
+<h2>Your Workouts</h2>
+<div id="workoutButtons"></div>
 
-<button onclick="startWorkout(0)">Day 1 – Upper</button>
-<button onclick="startWorkout(1)">Day 2 – Pull</button>
-<button onclick="startWorkout(2)">Day 3 – Push Pump</button>
-<button onclick="startWorkout(3)">Day 4 – Legs</button>
-
+<button class="secondary" onclick="resetSetup()">Change Setup</button>
 <button class="secondary" onclick="toggleTheme()">Theme</button>
-<button class="secondary" onclick="resetEquipment()">Change Equipment</button>
 </div>
 
 
 <!-- WORKOUT -->
 <div id="workout" class="hidden">
 
-<h3 id="title"></h3>
+<h2 id="title"></h2>
 
 <div class="card">
-<div id="exercise"></div>
-<div id="reps"></div>
-<div class="timer" id="timer">0:00</div>
+<div id="exercise" style="font-size:20px;font-weight:600"></div>
+<div id="reps" class="small"></div>
 </div>
 
-<button class="green" onclick="nextExercise()">Next</button>
+<button onclick="nextExercise()">Next Exercise</button>
 <button class="secondary" onclick="goHome()">Back</button>
 </div>
 
@@ -115,109 +130,136 @@ margin-right:8px;
 
 <script>
 
-/* ---------- EXERCISE DATABASE ---------- */
+/* ---------------- DATABASE ---------------- */
 
-const db = [
+const exercises=[
 
-{ name:"DB Bench Press", equip:["bench","dumbbell"], day:0, reps:"4x8" },
-{ name:"Pushups", equip:["body"], day:0, reps:"4x15" },
+{name:"Barbell Bench Press",equip:["barbell","bench"],type:"push"},
+{name:"Dumbbell Bench Press",equip:["dumbbell","bench"],type:"push"},
+{name:"Push Ups",equip:["body"],type:"push"},
 
-{ name:"DB Rows", equip:["dumbbell"], day:1, reps:"4x8" },
-{ name:"Band Pulldown", equip:["band"], day:1, reps:"4x12" },
+{name:"Barbell Squat",equip:["barbell","rack"],type:"legs"},
+{name:"Goblet Squat",equip:["dumbbell","kettlebell"],type:"legs"},
+{name:"Bodyweight Squat",equip:["body"],type:"legs"},
 
-{ name:"DB Flyes", equip:["bench","dumbbell"], day:2, reps:"3x12" },
+{name:"Barbell Rows",equip:["barbell"],type:"pull"},
+{name:"Dumbbell Rows",equip:["dumbbell"],type:"pull"},
+{name:"Band Pulldown",equip:["band"],type:"pull"},
 
-{ name:"Goblet Squat", equip:["kettlebell","dumbbell"], day:3, reps:"4x10" },
-{ name:"Bodyweight Squat", equip:["body"], day:3, reps:"4x20" }
-
+{name:"Shoulder Press",equip:["dumbbell","barbell"],type:"push"},
+{name:"Lunges",equip:["body","dumbbell"],type:"legs"},
+{name:"Curls",equip:["dumbbell","barbell"],type:"arms"}
 ];
 
-/* ---------- STATE ---------- */
 
-let equipment = JSON.parse(localStorage.getItem("equip")||"null");
+/* ---------------- STATE ---------------- */
+
+let equipment, daysPerWeek;
 let workouts=[];
-let ei=0;
+let ei=0,currentDay=0;
 
-let seconds=0, interval;
 
-/* ---------- BUILD WORKOUTS ---------- */
+/* ---------------- BUILD SMART PLAN ---------------- */
 
-function buildWorkouts(){
-workouts=[[],[],[],[]];
+function buildPlan(){
 
-db.forEach(ex=>{
-if(ex.equip.some(e=>equipment.includes(e))){
-workouts[ex.day].push(ex);
+workouts=[];
+
+const types=["push","pull","legs","arms"];
+
+for(let d=0;d<daysPerWeek;d++){
+
+let dayType=types[d%types.length];
+
+let list=exercises.filter(ex=>
+ex.type===dayType &&
+ex.equip.some(e=>equipment.includes(e))
+);
+
+workouts.push(list);
 }
-});
+
 }
 
-/* ---------- SETUP ---------- */
 
-function saveEquipment(){
-equipment=[...document.querySelectorAll("input:checked")].map(x=>x.value);
-localStorage.setItem("equip",JSON.stringify(equipment));
+/* ---------------- SETUP ---------------- */
+
+function saveSetup(){
+
+equipment=[...document.querySelectorAll("#equipList input:checked")].map(x=>x.value);
+daysPerWeek=parseInt(document.getElementById("days").value);
+
+localStorage.setItem("setup",JSON.stringify({equipment,daysPerWeek}));
+
 startApp();
 }
 
-function resetEquipment(){
-localStorage.removeItem("equip");
+function resetSetup(){
+localStorage.removeItem("setup");
 location.reload();
 }
 
-/* ---------- APP START ---------- */
-
 function startApp(){
+
 document.getElementById("setup").classList.add("hidden");
 document.getElementById("home").classList.remove("hidden");
-buildWorkouts();
+
+buildPlan();
+renderButtons();
 }
 
-if(equipment) startApp();
+let saved=JSON.parse(localStorage.getItem("setup"));
+if(saved){
+equipment=saved.equipment;
+daysPerWeek=saved.daysPerWeek;
+startApp();
+}
 
-/* ---------- WORKOUT ---------- */
+
+/* ---------------- HOME ---------------- */
+
+function renderButtons(){
+
+let box=document.getElementById("workoutButtons");
+box.innerHTML="";
+
+workouts.forEach((_,i)=>{
+let b=document.createElement("button");
+b.textContent="Day "+(i+1)+" Workout";
+b.onclick=()=>startWorkout(i);
+box.appendChild(b);
+});
+}
+
+
+/* ---------------- WORKOUT ---------------- */
 
 function startWorkout(day){
+currentDay=day;
 ei=0;
 
 document.getElementById("home").classList.add("hidden");
 document.getElementById("workout").classList.remove("hidden");
 
-title.textContent="Workout "+(day+1);
+title.textContent="Day "+(day+1);
 
-showExercise(day);
-
-seconds=0;
-interval=setInterval(()=>{
-seconds++;
-let m=Math.floor(seconds/60);
-let s=(seconds%60).toString().padStart(2,"0");
-timer.textContent=m+":"+s;
-},1000);
-
-currentDay=day;
+showExercise();
 }
 
-function showExercise(day){
-if(!workouts[day].length){
-exercise.textContent="No exercises for your equipment";
-reps.textContent="";
-return;
-}
-
-let ex=workouts[day][ei];
+function showExercise(){
+let ex=workouts[currentDay][ei];
+if(!ex){exercise.textContent="No exercises available";return;}
 exercise.textContent=ex.name;
-reps.textContent=ex.reps;
+reps.textContent="3–4 sets • 8–12 reps";
 }
 
 function nextExercise(){
 ei++;
 if(ei>=workouts[currentDay].length) ei=0;
-showExercise(currentDay);
+showExercise();
 }
 
 function goHome(){
-clearInterval(interval);
 document.getElementById("workout").classList.add("hidden");
 document.getElementById("home").classList.remove("hidden");
 }
